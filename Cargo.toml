@@ -1,0 +1,22 @@
+[package]
+name = "breaker-pro-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gtk4 = "0.8"
+gtk4-layer-shell = "0.3"
+ksni = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+zbus = "4.0"
+glib = "0.19"
+dirs = "5.0"
+chrono = "0.4"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
