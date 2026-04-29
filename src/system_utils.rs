@@ -100,6 +100,7 @@ Categories=Utility;Health;
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_autostart_enabled(&self) -> bool {
         let path = self.desktop_file_path();
         if !path.exists() {

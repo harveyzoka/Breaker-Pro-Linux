@@ -8,7 +8,6 @@ use std::cell::RefCell;
 pub struct OverlayInstance {
     pub window: ApplicationWindow,
     pub timer_label: Label,
-    pub emergency_btn: Button,
     pub on_unlock: Rc<RefCell<Option<std::boxed::Box<dyn Fn()>>>>,
 }
 
@@ -179,7 +178,6 @@ impl OverlayWindow {
         OverlayInstance {
             window,
             timer_label,
-            emergency_btn,
             on_unlock,
         }
     }
