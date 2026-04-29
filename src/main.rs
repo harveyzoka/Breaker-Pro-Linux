@@ -70,7 +70,6 @@ fn build_ui(app: &Application) {
         fn title(&self) -> String { "Breaker Pro".into() }
         fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
             use ksni::menu::*;
-            let trigger = self.should_show.clone();
             let status_text = self.tray_text.clone();
             vec![
                 StandardItem {
@@ -81,8 +80,8 @@ fn build_ui(app: &Application) {
                 MenuItem::Separator,
                 StandardItem {
                     label: "Show Window".into(),
-                    activate: Box::new(move |_| {
-                        trigger.store(true, std::sync::atomic::Ordering::Relaxed);
+                    activate: Box::new(|tray: &mut AppTray| {
+                        tray.should_show.store(true, std::sync::atomic::Ordering::Relaxed);
                     }),
                     ..Default::default()
                 }.into(),
@@ -110,6 +109,7 @@ fn build_ui(app: &Application) {
         tick_count += 1;
 
         if should_show_clone.swap(false, std::sync::atomic::Ordering::Relaxed) {
+            ui_ref.window.set_visible(true);
             ui_ref.window.present();
         }
         
