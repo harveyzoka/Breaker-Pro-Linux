@@ -105,24 +105,24 @@ impl AppUI {
             entry
         };
 
-        settings_box.append(&Label::builder().label("--- THỜI GIAN (Phút / Giây) ---").halign(Align::Start).margin_bottom(10).build());
-        let e_sit = add_setting(&settings_box, "Ngồi (phút):", &current_settings.sitting_duration.to_string());
-        let e_stand = add_setting(&settings_box, "Đứng (phút):", &current_settings.standing_duration.to_string());
-        let e_trans = add_setting(&settings_box, "Chuyển đổi (giây):", &current_settings.transition_duration.to_string());
-        let e_idle = add_setting(&settings_box, "Reset khi rảnh (phút):", &current_settings.idle_threshold.to_string());
+        settings_box.append(&Label::builder().label("--- TIME (Minutes / Seconds) ---").halign(Align::Start).margin_bottom(10).build());
+        let e_sit = add_setting(&settings_box, "Sitting (min):", &current_settings.sitting_duration.to_string());
+        let e_stand = add_setting(&settings_box, "Standing (min):", &current_settings.standing_duration.to_string());
+        let e_trans = add_setting(&settings_box, "Transition (sec):", &current_settings.transition_duration.to_string());
+        let e_idle = add_setting(&settings_box, "Idle Reset (min):", &current_settings.idle_threshold.to_string());
 
-        settings_box.append(&Label::builder().label("--- GIỜ LÀM VIỆC (HH:MM-HH:MM) ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
-        let e_sched = add_setting(&settings_box, "Khung giờ:", &current_settings.work_schedules.join(", "));
+        settings_box.append(&Label::builder().label("--- WORK HOURS (HH:MM-HH:MM) ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
+        let e_sched = add_setting(&settings_box, "Schedule:", &current_settings.work_schedules.join(", "));
 
-        settings_box.append(&Label::builder().label("--- THÔNG BÁO ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
-        let e_sit_msg = add_setting(&settings_box, "Lệnh ngồi:", &current_settings.sit_msg);
-        let e_stand_msg = add_setting(&settings_box, "Lệnh đứng:", &current_settings.stand_msg);
+        settings_box.append(&Label::builder().label("--- NOTIFICATIONS ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
+        let e_sit_msg = add_setting(&settings_box, "Sit msg:", &current_settings.sit_msg);
+        let e_stand_msg = add_setting(&settings_box, "Stand msg:", &current_settings.stand_msg);
         
         // Sound path with FileDialog
         let file_box = Box::new(Orientation::Horizontal, 10);
-        let lbl = Label::builder().label("File Âm thanh:").halign(Align::Start).width_request(150).build();
+        let lbl = Label::builder().label("Sound File:").halign(Align::Start).width_request(150).build();
         let e_sound = Entry::builder().text(&current_settings.sound_path).hexpand(true).build();
-        let btn_browse = Button::with_label("Duyệt...");
+        let btn_browse = Button::with_label("Browse...");
         
         file_box.append(&lbl);
         file_box.append(&e_sound);
@@ -133,11 +133,11 @@ impl AppUI {
         let window_clone = window.clone();
         btn_browse.connect_clicked(move |_| {
             let dialog = gtk4::FileChooserNative::new(
-                Some("Chọn file âm thanh"),
+                Some("Select audio file"),
                 Some(&window_clone),
                 gtk4::FileChooserAction::Open,
-                Some("Chọn"),
-                Some("Hủy"),
+                Some("Select"),
+                Some("Cancel"),
             );
             
             let e_sound_inner = e_sound_clone.clone();
@@ -153,14 +153,14 @@ impl AppUI {
             dialog.show();
         });
 
-        settings_box.append(&Label::builder().label("--- KHÁC ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
-        let cb_strict = CheckButton::builder().label("Strict Mode (Khóa màn hình)").active(current_settings.strict_mode).build();
-        let cb_auto = CheckButton::builder().label("Auto Start (Khởi động cùng hệ thống)").active(current_settings.auto_start).build();
+        settings_box.append(&Label::builder().label("--- OTHERS ---").halign(Align::Start).margin_top(10).margin_bottom(10).build());
+        let cb_strict = CheckButton::builder().label("Strict Mode (Lock screen)").active(current_settings.strict_mode).build();
+        let cb_auto = CheckButton::builder().label("Auto Start (System boot)").active(current_settings.auto_start).build();
         settings_box.append(&cb_strict);
         settings_box.append(&cb_auto);
 
         let alpha_box = Box::new(Orientation::Horizontal, 10);
-        let alpha_lbl = Label::builder().label("Độ mờ Overlay:").halign(Align::Start).width_request(150).build();
+        let alpha_lbl = Label::builder().label("Overlay Alpha:").halign(Align::Start).width_request(150).build();
         let alpha_scale = gtk4::Scale::with_range(Orientation::Horizontal, 0.0, 1.0, 0.05);
         alpha_scale.set_value(current_settings.overlay_alpha as f64);
         alpha_scale.set_hexpand(true);
@@ -168,7 +168,7 @@ impl AppUI {
         alpha_box.append(&alpha_scale);
         settings_box.append(&alpha_box);
 
-        let save_button = Button::builder().label("Lưu Cài Đặt").css_classes(["save"]).margin_top(20).build();
+        let save_button = Button::builder().label("Save Settings").css_classes(["save"]).margin_top(20).build();
         settings_box.append(&save_button);
 
         settings_scroll.set_child(Some(&settings_box));
@@ -243,9 +243,9 @@ impl AppUI {
 
             timer_save.borrow_mut().update_settings(new_settings.clone());
             
-            btn.set_label("Đã lưu thành công!");
+            btn.set_label("Saved Successfully!");
             gtk4::glib::timeout_add_local(std::time::Duration::from_secs(2), gtk4::glib::clone!(@weak btn => @default-return gtk4::glib::ControlFlow::Break, move || {
-                btn.set_label("Lưu Cài Đặt");
+                btn.set_label("Save Settings");
                 gtk4::glib::ControlFlow::Break
             }));
         });

@@ -58,7 +58,52 @@ fn build_ui(app: &Application) {
     let should_show = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let should_show_clone = should_show.clone();
 
+    struct AppTray {
+        should_show: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        tray_text: String,
+    }
+    impl ksni::Tray for AppTray {
+        fn icon_name(&self) -> String { "app".into() }
+        fn icon_theme_path(&self) -> String { "/run/media/zoka/Harvey/Workspace/Breaker-Pro-Rust".into() }
+        fn id(&self) -> String { "breaker-pro-rust".into() }
+        fn category(&self) -> ksni::Category { ksni::Category::ApplicationStatus }
+        fn title(&self) -> String { "Breaker Pro".into() }
+        fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
+            use ksni::menu::*;
+            let trigger = self.should_show.clone();
+            let status_text = self.tray_text.clone();
+            vec![
+                StandardItem {
+                    label: status_text,
+                    enabled: false,
+                    ..Default::default()
+                }.into(),
+                MenuItem::Separator,
+                StandardItem {
+                    label: "Show Window".into(),
+                    activate: Box::new(move |_| {
+                        trigger.store(true, std::sync::atomic::Ordering::Relaxed);
+                    }),
+                    ..Default::default()
+                }.into(),
+                StandardItem {
+                    label: "Quit".into(),
+                    activate: Box::new(|_| std::process::exit(0)),
+                    ..Default::default()
+                }.into(),
+            ]
+        }
+    }
+    
+    let service = ksni::TrayService::new(AppTray { 
+        should_show: should_show.clone(), 
+        tray_text: "Status: --:--".to_string(),
+    });
+    let tray_handle = service.handle();
+    service.spawn();
+
     let mut tick_count = 0;
+    let mut last_tray_text = String::new();
 
     // Timer tick loop
     gtk4::glib::timeout_add_local(Duration::from_secs(1), move || {
@@ -118,6 +163,26 @@ fn build_ui(app: &Application) {
             }
         }
 
+        {
+            let timer_ref = ui_ref.timer.borrow();
+            let state = timer_ref.state.borrow();
+            let s = state.remaining_seconds;
+            let mins_display = (s as f32 / 60.0).ceil() as u32;
+            let phase_str = match state.mode {
+                TimerMode::Sitting => "Sitting",
+                TimerMode::Standing => "Standing",
+                TimerMode::Transition => "Transition",
+            };
+            let status = if state.is_running { "Running" } else { "Paused" };
+            
+            let new_text = format!("{}: {} min ({})", phase_str, mins_display, status);
+            if new_text != last_tray_text {
+                last_tray_text = new_text.clone();
+                tray_handle.update(|tray: &mut AppTray| {
+                    tray.tray_text = new_text;
+                });
+            }
+        }
         
         ui_ref.update_display();
         
@@ -129,42 +194,6 @@ fn build_ui(app: &Application) {
         }
 
         gtk4::glib::ControlFlow::Continue
-    });
-
-    std::thread::spawn(move || {
-        struct AppTray {
-            should_show: std::sync::Arc<std::sync::atomic::AtomicBool>,
-        }
-        impl ksni::Tray for AppTray {
-            fn icon_name(&self) -> String { "app".into() }
-            fn icon_theme_path(&self) -> String { "/run/media/zoka/Harvey/Workspace/Breaker-Pro-Rust".into() }
-            fn id(&self) -> String { "breaker-pro-rust".into() }
-            fn category(&self) -> ksni::Category { ksni::Category::ApplicationStatus }
-            fn title(&self) -> String { "Breaker Pro".into() }
-            fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
-                use ksni::menu::*;
-                let trigger = self.should_show.clone();
-                vec![
-                    StandardItem {
-                        label: "Show Window".into(),
-                        activate: Box::new(move |_| {
-                            trigger.store(true, std::sync::atomic::Ordering::Relaxed);
-                        }),
-                        ..Default::default()
-                    }.into(),
-                    StandardItem {
-                        label: "Quit".into(),
-                        activate: Box::new(|_| std::process::exit(0)),
-                        ..Default::default()
-                    }.into(),
-                ]
-            }
-        }
-        
-        let service = ksni::TrayService::new(AppTray { should_show });
-        if let Err(e) = service.run() {
-            println!("Tray error: {}", e);
-        }
     });
 }
 
