@@ -2,6 +2,8 @@
 
 A lightweight, native health timer application for Linux built with **Rust** and **GTK4**. Breaker Pro helps you manage your sitting and standing habits by reminding you to take breaks and switch positions, keeping your posture healthy during long working hours.
 
+![Breaker Pro screenshot](picture/Screenshot%20From%202026-05-19%2001-44-22.png)
+
 ## Key Features
 
 - **Extremely Lightweight:** Compiled to native machine code. Uses shared GTK4 system libraries, consuming only ~45MB RAM while running.
